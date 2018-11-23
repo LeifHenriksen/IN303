@@ -14,6 +14,9 @@ int* tabOccu(char* fileName){
     }
     int charac;
     int* tab=malloc(256);
+    for (int i=0;i<256:i++){
+        tab[i]=0;
+    }
     while ((charac=fgetc(myFile))!=EOF){
         tab[charac]++;
     }
