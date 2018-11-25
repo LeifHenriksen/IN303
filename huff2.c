@@ -66,13 +66,22 @@ typedef struct occuCharac {
 
 }occuCharac;
 
+
+typedef struct elementDic{
+  int codeAscii;
+  int codeArbre[16];
+  int tailleCode;
+  int nboccu;
+}elementDic;
+
+
 void nouveuNoeud(int indiceA , int indiceB , int *taille , occuCharac* T );
 int NbDeSansPeres(int taille , occuCharac* T);
 void ajoutPere(int indicefils,int indicepere , occuCharac* T);
 void ajoutFeuilleG(int indicefils,int indicepere ,occuCharac* T );
 void ajoutFeuilleD(int indicefils,int indicepere ,occuCharac* T );
 
-
+int EstUneFeuille(occuCharac x);
 
 
 
@@ -146,12 +155,12 @@ void printTabStruct( occuCharac* T , int taille)
   for(int i = 0 ; i < taille ; i++)
     {
       printf("T[%i] = \"%c\" = %i , nbocc = %i \n" , i ,T[i].codeAscii,T[i].codeAscii  ,T[i].occu );
-      if(T[i].pere!=NULL && T[i].FG == NULL && T[i].FD == NULL)
+        if(T[i].pere!=NULL && T[i].FG == NULL && T[i].FD == NULL)
 	printf("pere = %c   \n" ,(T[i].pere)->codeAscii );
       
       if(T[i].pere!=NULL && T[i].FG != NULL && T[i].FD != NULL)
 	printf("je suis un noeud mon pere = %c , FG = %c , FD = %c \n" ,(T[i].pere)->codeAscii ,(T[i].FG)->codeAscii ,(T[i].FD)->codeAscii);
-      else
+	else
 	if ( T[i].FG != NULL && T[i].FD != NULL)
 	  printf("je suis le sommet FG = %c , FD = %c \n" ,(T[i].FG)->codeAscii ,(T[i].FD)->codeAscii);
       
@@ -188,7 +197,7 @@ void PlusPetiteSomme(int* indiceA , int* indiceB , int taille, occuCharac* T){
   
   
   printf("indiceA = %i , indiceB = %i  " , indiceA[0] , indiceB[0]);
-  delay(100); 
+ 
 }
 
 void createurArbre(int *taille , occuCharac* T){
@@ -217,7 +226,7 @@ void nouveuNoeud(int indiceA , int indiceB , int *taille , occuCharac* T )
   
   T[*taille].occu=T[indiceA].occu + T[indiceB].occu;
   //  T[TailleTabStruct].nom=;
-  T[*taille].codeAscii=50;
+  // T[*taille].codeAscii=50;
   T[*taille].pere=NULL;
   T[*taille].perePres=0;
 
@@ -238,7 +247,7 @@ int NbDeSansPeres(int taille , occuCharac* T){
   
   printf("taille = %i , compteur = %i \n" , taille , compteur);
   return compteur;
-  delay(100);
+ 
   //si c'est egal a 1 on arrete car c'est le sommet
 }
 
@@ -251,20 +260,68 @@ void ajoutFeuilleD(int indicefils,int indicepere ,occuCharac* T ){ T[indicepere]
 
 void ajoutFeuilleG(int indicefils,int indicepere ,occuCharac* T){ T[indicepere].FG= &T[indicefils];}
 
+int EstUneFeuille(occuCharac x){
+
+  return (x.FG == NULL && x.FD == NULL) ;
+
+}
+
+void copieTab(int *T , int *R){
+  for(int i = 0 ; i<16 ; i++)
+    R[i] = T[i];
+
+}
 
 
 
+void CreationDic(int *tabCode ,elementDic *D , occuCharac T , int tailleCode , int *tailleDic){
 
+  if(EstUneFeuille(T)){
+  
+     copieTab(tabCode , D[*tailleDic].codeArbre);
+     D[*tailleDic].codeAscii = T.codeAscii;
+     D[*tailleDic].tailleCode = tailleCode;
+     D[*tailleDic].nboccu = T.occu;
+     *tailleDic = *tailleDic + 1;
+  }
+  else
+    {
+      tabCode[tailleCode] = 1;
+      CreationDic(tabCode, D , *(T.FG) , tailleCode + 1 , tailleDic);
+      tabCode[tailleCode] = 0;
+      CreationDic(tabCode, D  , *(T.FD) , tailleCode + 1 , tailleDic);
+    }
+  
+}
+
+void PrintDic(int tailleDic , elementDic *D){
+  for(int i = 0 ; i<tailleDic ; i++){
+    printf("D[%i] : codeAscii = %i ,  char = %c,  nboccu = %i  , tailleCode = %i , codeArbre = " , i , D[i].codeAscii  , D[i].codeAscii, D[i].nboccu,D[i].tailleCode);
+    
+    for(int j = 0 ; j<D[i].tailleCode ; j++)
+      printf(" [%i] " , D[i].codeArbre[j]);
+    printf("\n");
+  }
+}
 
 int main(int argc , char** argv)
 {
   
   int *TailleTabStruct = (int*) malloc(sizeof(int));
   occuCharac* T;
+  
+  int tabCode[16];
+  elementDic* D = (elementDic*) malloc(sizeof(elementDic) * 1000);
+  int *tailleDic = (int*) malloc(sizeof(int));
+  int tailleCode = 0;
 
   T = tabStruct(tabOccu(argv[1]) , TailleTabStruct);
   createurArbre(TailleTabStruct , T);
   printTabStruct(T , *TailleTabStruct);
+  
+  CreationDic(tabCode , D , T[*TailleTabStruct-1] , tailleCode , tailleDic);
+  printf("tailleDic = %i \n" , *tailleDic);
+  PrintDic(*tailleDic , D);
   
   return(0);
 }
