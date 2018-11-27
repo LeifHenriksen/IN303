@@ -71,3 +71,31 @@ char createurBuffer(char* str){
   return buff;
 }
 
+
+
+
+int* tabOccu(char* fileName){
+  FILE *myFile=fopen(fileName, "r");
+  
+  if(myFile==NULL)
+    {
+        printf("merci de mettre une file \n");
+      exit(2);        
+    }
+  int charac;
+  printf("--------- \n");
+  int* tab=malloc(sizeof(int) * 256);
+  for (int i=0;i<256;i++)
+    {
+      tab[i]=0;
+    }
+  while ((charac=fgetc(myFile))!=EOF){
+    tab[charac]++;
+  }
+for(int i = 0 ; i<256 ; i++)
+  printf("%c = %i num %i \n", i , tab[i],i );
+//---------------EOF---------------//
+ tab[3]++;
+//-------------------------------//
+ return(tab);
+}
