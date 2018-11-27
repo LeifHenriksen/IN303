@@ -86,6 +86,7 @@ int* tabOccu(char* fileName){
   }
 for(int i = 0 ; i<256 ; i++)
 	printf("%c = %i num %i \n", i , tab[i],i );
+tab[3]++;
   return(tab);
 }
 
@@ -206,7 +207,7 @@ void nouveuNoeud(int indiceA , int indiceB , int *taille , occuCharac* T )
   
   T[*taille].occu=T[indiceA].occu + T[indiceB].occu;
   //  T[TailleTabStruct].nom=;
-  T[*taille ].codeAscii=-1;
+  //T[*taille ].codeAscii=-1;
   T[*taille].pere=NULL;
   T[*taille].perePres=0;
 
@@ -295,7 +296,7 @@ char* getCodeFromChar(char monChar, elementDic* monDico, int tailleDico){
     res[j]=monDico[i].codeArbre[j] + '0';
   }
   res[monDico[i].tailleCode]='\0';
-  printf("char %c code %s \n",monChar, res);
+  //printf("char %c code %s \n",monChar, res);
   return(res);
 }
 
@@ -328,9 +329,11 @@ void compresseur(char* nomSource, char* nomSortie, elementDic* dico, int tailleD
   while ((charac=fgetc(fileSource))!=EOF){
       posChar=0;
       int tailleCode=getTailleCodeChar(charac,dico,tailleDico);
-      char* codeChar=getCodeFromChar(charac,dico,tailleDico);
+      char* codeChar=malloc(tailleCode);
+      codeChar=getCodeFromChar(charac,dico,tailleDico);
       while(posChar<tailleCode){
           if (posBuff==8){
+              printf("coucou je suis dans le 2e while  :  %c", bitsToA(buffer));
               fputc(bitsToA(buffer),fileSortie);
               posBuff=0;
         }             
@@ -339,8 +342,9 @@ void compresseur(char* nomSource, char* nomSortie, elementDic* dico, int tailleD
   }
   if (posBuff==8)
       fputc(bitsToA(buffer),fileSortie);
-  int tailleCodeEOF=getTailleCodeChar(EOF,dico,tailleDico);
-  char* codeEOF=getCodeFromChar(EOF,dico,tailleDico);
+  int tailleCodeEOF=getTailleCodeChar(3,dico,tailleDico);
+  char* codeEOF=malloc(tailleCodeEOF);
+  codeEOF=getCodeFromChar(3,dico,tailleDico);
   for (int i=0;i<tailleCodeEOF;i++){
       if (posBuff==8){
           fputc(bitsToA(buffer),fileSortie);
@@ -348,6 +352,8 @@ void compresseur(char* nomSource, char* nomSortie, elementDic* dico, int tailleD
     } 
           buffer[posBuff++]=codeEOF[i];
 }
+fclose(fileSource);
+fclose(fileSortie);
 }
 
 
@@ -371,6 +377,7 @@ int main(int argc , char** argv)
   PrintDic(*tailleDic , D);
   //char myChar=getchar();
   //getCodeFromChar(myChar,D,*tailleDic);
+  //getTailleCodeChar(myChar,D,*tailleDic);
   compresseur(argv[1],argv[2],D,*tailleDic);
   return(0);
 }
