@@ -2,44 +2,18 @@
 #include <stdlib.h>
 #include <time.h> 
 /*--------------------A LIRE-----------------------------------------
-
 -Les delays sont pour debugger suelement
-
 -Le programe arrive a faire l'arbre, tu peux tester avec "this is an example of a huffman tree " on trouve la meme chosse que sur wikipedia donc c'est bonne. La seul chosse
 c'est que on a des occu en plus, une seulement dans cette exemple mais je pense que c'est car on a le character 0, que je ne c'est pass pour quoi il existe.
-
 -les mallocs et reallocs sont bipolairs donc j'ai utilise des tab statiques parfois
-
 - breve, le truc marche bien, la seul chose c'est que on a une occu en plus et
 il faut donner des nombres aux noeuds, tu peux voir  // char nom; dans la struct
 mais je n'ai pas reussi a le faire
-
 - Donc 
 1-) voir si le occu +1 est un probleme ou non 
 2-) donner un nombre aux noeuds
 2.1-)on peut fair aussi un .h pour et .cpp pour les fonctions 
-
 apres on peut faire le code, puis compreser et finalement decompreser
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ----------------------------------------------FIN-----------------
 */
 
@@ -69,8 +43,9 @@ typedef struct occuCharac {
 
 typedef struct elementDic{
   int codeAscii;
-  int codeArbre[8];
+  int codeArbre[16];
   int tailleCode;
+  int nboccu;
 }elementDic;
 
 
@@ -101,7 +76,7 @@ int* tabOccu(char* fileName){
     }
   int charac;
   printf("--------- \n");
-  int* tab=(int*) malloc(sizeof(int) * 256);
+  int* tab=malloc(sizeof(int) * 256);
   for (int i=0;i<256;i++)
     {
       tab[i]=0;
@@ -109,6 +84,8 @@ int* tabOccu(char* fileName){
   while ((charac=fgetc(myFile))!=EOF){
     tab[charac]++;
   }
+for(int i = 0 ; i<256 ; i++)
+	printf("%c = %i num %i \n", i , tab[i],i );
   return(tab);
 }
 
@@ -125,7 +102,7 @@ occuCharac* tabStruct(int* tabInt , int *CompteurTailleStruct){
 	  }
       }
 
-    occuCharac* laTabStruct=malloc(nbrCases);
+    occuCharac* laTabStruct=malloc(nbrCases * sizeof(occuCharac));
 
     int compteurCases=0;
 
@@ -146,7 +123,10 @@ occuCharac* tabStruct(int* tabInt , int *CompteurTailleStruct){
 	  }
       }
     *CompteurTailleStruct = compteurCases + 1;
-    return(laTabStruct);
+for(int i = 0 ; i<compteurCases ; i++)
+	printf("'%c' est present %i fois \n" , laTabStruct[i].codeAscii ,laTabStruct[i].occu );
+return(laTabStruct);
+	
 }
 
 void printTabStruct( occuCharac* T , int taille)
@@ -177,7 +157,7 @@ void PlusPetiteSomme(int* indiceA , int* indiceB , int taille, occuCharac* T){
       if(T[i].perePres == 0 && T[i].occu<=PPE)
 	{
 	  PPE = T[i].occu;
-	  indiceA[0] = i;
+	  *indiceA = i;
 	}
     }
 
@@ -190,28 +170,29 @@ void PlusPetiteSomme(int* indiceA , int* indiceB , int taille, occuCharac* T){
       if(T[i].perePres == 0 && T[i].occu<=PPE && indiceA[0] != i)
 	{
 	  PPE = T[i].occu;
-	  indiceB[0] = i;
+	  *indiceB = i;
 	}
     }
   
   
-  printf("indiceA = %i , indiceB = %i  " , indiceA[0] , indiceB[0]);
+// printf("indiceA = %i , indiceB = %i  " , indiceA[0] , indiceB[0]);
  
 }
 
 void createurArbre(int *taille , occuCharac* T){
-  //int *indiceA= (int*) malloc(sizeof(int));
-  // int *indiceB= (int*) malloc(sizeof(int));
+  int *indiceA= (int*) malloc(sizeof(int));
+   int *indiceB= (int*) malloc(sizeof(int));
   //???????? ne marche pas
-  int indiceA[1];
-  int indiceB[1];
+ // int *indiceA;
+ // int *indiceB;
   while(NbDeSansPeres(*taille , T) != 1)
     {
       PlusPetiteSomme(indiceA , indiceB , *taille , T);
-      nouveuNoeud(indiceA[0] , indiceB[0] , taille , T);
+      nouveuNoeud(*indiceA , *indiceB , taille , T);
     }
   
-  
+  for(int i = 0 ; i<*taille; i++)
+	printf("creqteur arbre  : codeAscii ='%i' est present %i fois \n" , T[i].codeAscii ,T[i].occu );
   //free(indiceA);
   //free(indiceB);
 }
@@ -225,7 +206,7 @@ void nouveuNoeud(int indiceA , int indiceB , int *taille , occuCharac* T )
   
   T[*taille].occu=T[indiceA].occu + T[indiceB].occu;
   //  T[TailleTabStruct].nom=;
-  // T[*taille].codeAscii=50;
+  T[*taille ].codeAscii=-1;
   T[*taille].pere=NULL;
   T[*taille].perePres=0;
 
@@ -233,7 +214,7 @@ void nouveuNoeud(int indiceA , int indiceB , int *taille , occuCharac* T )
   ajoutFeuilleD(indiceA , *taille , T);
   ajoutFeuilleG(indiceB , *taille , T);
   ajoutPere(indiceA , *taille , T);
-  ajoutPere(indiceB , *taille , T);
+  ajoutPere(indiceB , *taille, T);
   
   ++*taille;
 }
@@ -244,7 +225,7 @@ int NbDeSansPeres(int taille , occuCharac* T){
     if(T[i].perePres == 0)
       compteur = compteur+1;
   
-  printf("taille = %i , compteur = %i \n" , taille , compteur);
+ // printf("taille = %i , compteur = %i \n" , taille , compteur);
   return compteur;
  
   //si c'est egal a 1 on arrete car c'est le sommet
@@ -266,7 +247,7 @@ int EstUneFeuille(occuCharac x){
 }
 
 void copieTab(int *T , int *R){
-  for(int i = 0 ; i<100 ; i++)
+  for(int i = 0 ; i<16 ; i++)
     R[i] = T[i];
 
 }
@@ -280,6 +261,7 @@ void CreationDic(int *tabCode ,elementDic *D , occuCharac T , int tailleCode , i
      copieTab(tabCode , D[*tailleDic].codeArbre);
      D[*tailleDic].codeAscii = T.codeAscii;
      D[*tailleDic].tailleCode = tailleCode;
+     D[*tailleDic].nboccu = T.occu;
      *tailleDic = *tailleDic + 1;
   }
   else
@@ -294,7 +276,8 @@ void CreationDic(int *tabCode ,elementDic *D , occuCharac T , int tailleCode , i
 
 void PrintDic(int tailleDic , elementDic *D){
   for(int i = 0 ; i<tailleDic ; i++){
-    printf("D[%i] : codeAscii = %i ,  char = %c, tailleCode = %i , codeArbre = " , i , D[i].codeAscii , D[i].codeAscii, D[i].tailleCode);
+    printf("D[%i] : codeAscii = %i ,  char = %c,  nboccu = %i  , tailleCode = %i , codeArbre = " , i , D[i].codeAscii  , D[i].codeAscii, D[i].nboccu,D[i].tailleCode);
+    
     for(int j = 0 ; j<D[i].tailleCode ; j++)
       printf(" [%i] " , D[i].codeArbre[j]);
     printf("\n");
@@ -306,15 +289,15 @@ int main(int argc , char** argv)
   
   int *TailleTabStruct = (int*) malloc(sizeof(int));
   occuCharac* T;
-  
-  int tabCode[100];
-  elementDic* D = (elementDic*) malloc(sizeof(elementDic) * 100);
+	  
+  int tabCode[16];
+  elementDic* D = (elementDic*) malloc(sizeof(elementDic) * 1000);
   int *tailleDic = (int*) malloc(sizeof(int));
   int tailleCode = 0;
 
   T = tabStruct(tabOccu(argv[1]) , TailleTabStruct);
   createurArbre(TailleTabStruct , T);
-  printTabStruct(T , *TailleTabStruct);
+ //printTabStruct(T , *TailleTabStruct);
   
   CreationDic(tabCode , D , T[*TailleTabStruct-1] , tailleCode , tailleDic);
   printf("tailleDic = %i \n" , *tailleDic);
