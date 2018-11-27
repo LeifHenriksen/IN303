@@ -43,7 +43,7 @@ typedef struct occuCharac {
 
 typedef struct elementDic{
   int codeAscii;
-  int codeArbre[16];
+  int codeArbre[256];
   int tailleCode;
   int nboccu;
 }elementDic;
@@ -54,7 +54,6 @@ int NbDeSansPeres(int taille , occuCharac* T);
 void ajoutPere(int indicefils,int indicepere , occuCharac* T);
 void ajoutFeuilleG(int indicefils,int indicepere ,occuCharac* T );
 void ajoutFeuilleD(int indicefils,int indicepere ,occuCharac* T );
-
 int EstUneFeuille(occuCharac x);
 
 
@@ -247,7 +246,7 @@ int EstUneFeuille(occuCharac x){
 }
 
 void copieTab(int *T , int *R){
-  for(int i = 0 ; i<16 ; i++)
+  for(int i = 0 ; i<256 ; i++)
     R[i] = T[i];
 
 }
@@ -284,13 +283,72 @@ void PrintDic(int tailleDic , elementDic *D){
   }
 }
 
+
+
+//nbchars 8bits , char 8bits , occu sizeof(int);
+
+
+int* intTobin(){}
+
+
+char* charTobin(char c)
+{
+  int d, compteur;
+  char *Tbin;
+  
+  compteur = 0;
+  Tbin = (char*)malloc(8+1);
+  
+ 
+  
+  for (int i = 8 ; i >= 0 ; i--)
+    {
+      d = c >> i;
+      
+      if (d & 1)
+	Tbin[compteur]= 1 + '0';
+      else
+        Tbin[compteur] = 0 + '0';
+      
+      compteur++;
+    }
+  Tbin[compteur] = '\0';
+  
+  return  Tbin;
+}
+
+//str = le code binare
+char createurBuffer(char* str){
+  char buff;
+  char bit;
+  
+  for(int i = 0 ; i<8 ; i++)
+    {
+      bit = str[i]-'0';
+      
+      buff = buff | bit;
+      if(i!=8-1)
+	buff = buff<<1; 
+    }
+  return buff;
+}
+
+
+
+
+
+
+
+
+
+
 int main(int argc , char** argv)
 {
   
   int *TailleTabStruct = (int*) malloc(sizeof(int));
   occuCharac* T;
 	  
-  int tabCode[16];
+  int tabCode[256];
   elementDic* D = (elementDic*) malloc(sizeof(elementDic) * 1000);
   int *tailleDic = (int*) malloc(sizeof(int));
   int tailleCode = 0;
@@ -302,6 +360,10 @@ int main(int argc , char** argv)
   CreationDic(tabCode , D , T[*TailleTabStruct-1] , tailleCode , tailleDic);
   printf("tailleDic = %i \n" , *tailleDic);
   PrintDic(*tailleDic , D);
+  char *c;
+  c = charTobin('A');
+  for(int i = 0 ; i<8 ; i++ )
+    printf("%s \n" , c);
   
   return(0);
 }
