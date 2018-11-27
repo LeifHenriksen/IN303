@@ -1,0 +1,73 @@
+
+//nbchars 8bits , char 8bits , occu sizeof(int);
+
+//occu -> bin
+char* intTobin(int entier){
+  int d, compteur;
+  char *Tbin;
+   
+   compteur= 0;
+   Tbin = (char*)malloc(32+1);
+   
+
+   for (int j  = 31 ; j >= 0 ; j--)
+     {
+       d = entier >> j;
+       
+       if (d & 1)
+	 Tbin[compteur]= 1 + '0';
+       else
+	 Tbin[compteur] = 0 + '0';
+       
+       compteur++;
+     }
+   Tbin[compteur] = '\0';
+   
+   return  Tbin;
+   
+}
+
+//nbchars , char
+char* charTobin(char c)
+{
+  int d, compteur;
+  char *Tbin;
+  
+  compteur = 0;
+  Tbin = (char*)malloc(8+1);
+  
+ 
+  
+  for (int i = 8 ; i >= 0 ; i--)
+    {
+      d = c >> i;
+      
+      if (d & 1)
+	Tbin[compteur]= 1 + '0';
+      else
+        Tbin[compteur] = 0 + '0';
+      
+      compteur++;
+    }
+  Tbin[compteur] = '\0';
+  
+  return  Tbin;
+}
+
+
+//str = le code binare
+char createurBuffer(char* str){
+  char buff;
+  char bit;
+  
+  for(int i = 0 ; i<8 ; i++)
+    {
+      bit = str[i]-'0';
+      
+      buff = buff | bit;
+      if(i!=8-1)
+	buff = buff<<1; 
+    }
+  return buff;
+}
+
