@@ -43,7 +43,7 @@ typedef struct occuCharac {
 
 typedef struct elementDic{
   int codeAscii;
-  int codeArbre[16];
+  int codeArbre[256];
   int tailleCode;
   int nboccu;
 }elementDic;
@@ -176,7 +176,7 @@ void PlusPetiteSomme(int* indiceA , int* indiceB , int taille, occuCharac* T){
     }
   
   
-// printf("indiceA = %i , indiceB = %i  " , indiceA[0] , indiceB[0]);
+printf("indiceA = %i , indiceB = %i  " , indiceA[0] , indiceB[0]);
  
 }
 
@@ -226,7 +226,7 @@ int NbDeSansPeres(int taille , occuCharac* T){
     if(T[i].perePres == 0)
       compteur = compteur+1;
   
- // printf("taille = %i , compteur = %i \n" , taille , compteur);
+  //printf("taille = %i , compteur = %i \n" , taille , compteur);
   return compteur;
  
   //si c'est egal a 1 on arrete car c'est le sommet
@@ -248,7 +248,7 @@ int EstUneFeuille(occuCharac x){
 }
 
 void copieTab(int *T , int *R){
-  for(int i = 0 ; i<16 ; i++)
+  for(int i = 0 ; i<256 ; i++)
     R[i] = T[i];
 
 }
@@ -321,7 +321,7 @@ char bitsToA(char* binString){
 
 void compresseur(char* nomSource, char* nomSortie, elementDic* dico, int tailleDico){
   FILE *fileSource=fopen(nomSource, "r");
-  FILE *fileSortie=fopen(nomSource,"w");
+  FILE *fileSortie=fopen(nomSortie,"w");
   char charac;
   char* buffer=malloc(8);
   int posChar=0;
@@ -333,15 +333,15 @@ void compresseur(char* nomSource, char* nomSortie, elementDic* dico, int tailleD
       codeChar=getCodeFromChar(charac,dico,tailleDico);
       while(posChar<tailleCode){
           if (posBuff==8){
-              printf("coucou je suis dans le 2e while  :  %c", bitsToA(buffer));
               fputc(bitsToA(buffer),fileSortie);
               posBuff=0;
         }             
               buffer[posBuff++]=codeChar[posChar++];
       }
   }
-  if (posBuff==8)
+  if (posBuff==8){
       fputc(bitsToA(buffer),fileSortie);
+  }
   int tailleCodeEOF=getTailleCodeChar(3,dico,tailleDico);
   char* codeEOF=malloc(tailleCodeEOF);
   codeEOF=getCodeFromChar(3,dico,tailleDico);
@@ -352,8 +352,8 @@ void compresseur(char* nomSource, char* nomSortie, elementDic* dico, int tailleD
     } 
           buffer[posBuff++]=codeEOF[i];
 }
-fclose(fileSource);
-fclose(fileSortie);
+//fclose(fileSource);
+//fclose(fileSortie);
 }
 
 
@@ -363,7 +363,7 @@ int main(int argc , char** argv)
   int *TailleTabStruct = (int*) malloc(sizeof(int));
   occuCharac* T;
 	  
-  int tabCode[16];
+  int tabCode[256];
   elementDic* D = (elementDic*) malloc(sizeof(elementDic) * 1000);
   int *tailleDic = (int*) malloc(sizeof(int));
   int tailleCode = 0;
@@ -373,8 +373,8 @@ int main(int argc , char** argv)
  //printTabStruct(T , *TailleTabStruct);
   
   CreationDic(tabCode , D , T[*TailleTabStruct-1] , tailleCode , tailleDic);
-  printf("tailleDic = %i \n" , *tailleDic);  
-  PrintDic(*tailleDic , D);
+  //printf("tailleDic = %i \n" , *tailleDic);  
+  //PrintDic(*tailleDic , D);
   //char myChar=getchar();
   //getCodeFromChar(myChar,D,*tailleDic);
   //getTailleCodeChar(myChar,D,*tailleDic);
