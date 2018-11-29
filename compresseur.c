@@ -123,7 +123,7 @@ occuCharac* tabStruct(int* tabInt , int *CompteurTailleStruct){
 	    compteurCases++;
 	  }
       }
-    *CompteurTailleStruct = compteurCases + 1;
+    *CompteurTailleStruct = compteurCases + 2;
 for(int i = 0 ; i<compteurCases ; i++)
 	printf("'%c' est present %i fois \n" , laTabStruct[i].codeAscii ,laTabStruct[i].occu );
 return(laTabStruct);
@@ -319,6 +319,50 @@ char bitsToA(char* binString){
 }
 
 
+char* charToBin(char monChar){
+    int monInt=(int)monChar;
+    char* res=malloc(sizeof(char));
+    int i=0;
+    while(monInt!=0){
+        res[7-i]=(monInt%2==1 ? '1' : '0');
+        monInt=monInt/2;
+        i++;
+    }
+    while(i<8){
+        res[7-i]='0';
+        i++;
+    }
+    return(res);
+}
+
+
+
+
+
+        //filsGauche : 1 ; filsDroite : 0
+void decompresseur(char* nomSource, char* nomSortie, occuCharac racine){
+    FILE *fileSource=fopen(nomSource,"r");
+    FILE *fileSortie=fopen(nomSortie,"w");
+    char charac;
+    char* buffer;
+    occuCharac posArbre=racine;
+    while((charac=fgetc(fileSource))!=EOF){
+            buffer=charToBin(charac);
+            for(int posBuffer=0;posBuffer<8;posBuffer++){
+                if(EstUneFeuille(posArbre)){
+                    fputc(posArbre.codeAscii,fileSortie);
+                    posArbre=racine;
+                }
+                posArbre=(buffer[posBuffer]=='1' ? *posArbre.FG : *posArbre.FD);
+            }
+    }
+    putc(EOF,fileSortie);
+}
+
+
+
+
+
 void compresseur(char* nomSource, char* nomSortie, elementDic* dico, int tailleDico){
   FILE *fileSource=fopen(nomSource, "r");
   FILE *fileSortie=fopen(nomSortie,"w");
@@ -379,5 +423,6 @@ int main(int argc , char** argv)
   //getCodeFromChar(myChar,D,*tailleDic);
   //getTailleCodeChar(myChar,D,*tailleDic);
   compresseur(argv[1],argv[2],D,*tailleDic);
+  decompresseur(argv[2],argv[3],T[*TailleTabStruct-1]);
   return(0);
 }
