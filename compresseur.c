@@ -142,6 +142,21 @@ void printTabStruct( occuCharac* T , int taille)
     }
 }
 
+
+void printArbre(occuCharac* tabOccu,int taille){
+    for(int i=0;i<taille;i++){
+        printf("%x pos %i char %i x %i pere(%d) %x g %x d %x\n",
+               &tabOccu[i],
+               i,tabOccu[i].codeAscii,tabOccu[i].occu,
+               tabOccu[i].perePres,
+               tabOccu[i].pere,
+               tabOccu[i].FG,
+               tabOccu[i].FD);
+    }
+}
+
+
+
 void PlusPetiteSomme(int* indiceA , int* indiceB , int taille, occuCharac* T){
   int PPE = -1;
  
@@ -286,7 +301,7 @@ char* getCodeFromChar(unsigned char monChar, elementDic* monDico, int tailleDico
   while (i<tailleDico && monDico[i].codeAscii!=monChar){
     i++;
   }
-  if(i==tailleDico){
+  if(i>=tailleDico){
       printf("'%c' n'est pas dans le dico (ascii : %i) code \n",monChar,monChar);
 }
   char* res=malloc(monDico[i].tailleCode);
@@ -303,7 +318,7 @@ int getTailleCodeChar(unsigned char monChar, elementDic* monDico, int tailleDico
   while (i<tailleDico && monDico[i].codeAscii!=monChar){
     i++;
   }
-  if(i==tailleDico){
+  if(i>=tailleDico){
     printf("'%c' n'est pas dans le dico (ascii : %i) taille \n",monChar,monChar);
     }
   return(monDico[i].tailleCode);
@@ -356,14 +371,16 @@ void decompresseur(char* nomSource, char* nomSortie, occuCharac racine){
        
         for(int posBuffer=0;posBuffer<8;posBuffer++){
             if(EstUneFeuille(posArbre)){
-                //printf("%d mon code ascii que je rentre",posArbre.codeAscii);
+                printf("%d ascii d'une feuille\n",posArbre.codeAscii);
                 fputc((unsigned char)posArbre.codeAscii,fileSortie);
                 posArbre=racine;
                 }
                 if (buffer[posBuffer]=='1'){
-            posArbre=*posArbre.FG;
+                    printf(" got 1\n");
+                    posArbre=*posArbre.FG;
                 }
                 else{
+                    printf(" got 0\n");
                     posArbre=*posArbre.FD;
                 }
         }
@@ -374,6 +391,16 @@ void decompresseur(char* nomSource, char* nomSortie, occuCharac racine){
 }
 
 
+void printTree(occuCharac* T, int taille){
+    for(int i =0; i<taille;i++){
+        printf("P%x [label =\"%d %c x %d\"];\n",&T[i],i,T[i].codeAscii,T[i].occu);
+    }
+    for(int i =0; i<taille;i++){
+        printf("P%x -> P%x [color=\"green\"];\n",&T[i],T[i].FG);
+        printf("P%x -> P%x [color=\"blue\"];\n",&T[i],T[i].FD);
+        printf("P%x -> P%x [color=\"red\"];\n",&T[i],T[i].pere);
+    }
+}
 
 
 
@@ -384,11 +411,11 @@ void compresseur(char* nomSource, char* nomSortie, elementDic* dico, int tailleD
   char* buffer=malloc(8);
   int posBuff=0;
   while ((charac=fgetc(fileSource))!=255){
-      //printf("'%c' trouve dans le file (ascii : %i)\n",charac,charac);
+      printf("'%c' trouve dans le file (ascii : %i)\n",charac,charac);
       int tailleCode=getTailleCodeChar(charac,dico,tailleDico);
-      //printf("%i la taille du code de ce charac %c",tailleCode,charac);
+      printf("%i la taille du code de ce charac %c",tailleCode,charac);
       char* codeChar=getCodeFromChar(charac,dico,tailleDico);
-      //printString(codeChar,tailleCode);
+      printString(codeChar,tailleCode);
 	  for(int i=0;i<tailleCode;i++){
 			if(posBuff==8){
                 //printString(buffer,8);
@@ -417,11 +444,17 @@ int main(int argc , char** argv)
 
   T = tabStruct(tabOccu(argv[1]) , TailleTabStruct);
   createurArbre(TailleTabStruct , T);
+  //printf("tailletabstruct %i\n",*TailleTabStruct);
  //printTabStruct(T , *TailleTabStruct);
+  //printTree(T,*TailleTabStruct);
+ 
+ printf("--------------------------------------------\n");
   
   CreationDic(tabCode , D , T[*TailleTabStruct-1] , tailleCode , tailleDic);
+  printf("diccréé");
   //printf("tailleDic = %i \n" , *tailleDic);  
   //PrintDic(*tailleDic , D);
+  //printf("--------------------------------------------\n");
   compresseur(argv[1],argv[2],D,*tailleDic);
   //printAscii(argv[1],D,*tailleDic);
   decompresseur(argv[2],argv[3],T[*TailleTabStruct-1]);
