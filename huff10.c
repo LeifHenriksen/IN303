@@ -669,22 +669,37 @@ void printString(char* string, int taille){
     printf(" ma string\n");
 }
 
+
+
+int nombreCharac(char* nomFile){
+    FILE* fileSource=fopen(nomFile,"r");
+    unsigned char charac;
+    int res=0;
+    while((charac=fgetc(fileSource))!=255){
+        res++;
+    }
+    return(res);
+}
+
+
         //filsGauche : 1 ; filsDroite : 0
-void decompresseur(char* nomSource, char* nomSortie, occuCharac racine){
+void decompresseur(char* nomSource, char* nomSortie, occuCharac racine, int nombreChar){
     FILE *fileSource=fopen(nomSource,"r");
     FILE *fileSortie=fopen(nomSortie,"w");
     unsigned char charac;
     char* buffer;
     occuCharac posArbre=racine;
-    while((charac=fgetc(fileSource))!=255){
+    int nbrChar=0;
+    while(((charac=fgetc(fileSource))!=255) &&nbrChar<nombreChar ){
         buffer=charToBin(charac); 
        // printf("%c charac  %x ",charac,charac);
         printString(buffer,8);
        
         for(int posBuffer=0;posBuffer<8;posBuffer++){
-            if(EstUneFeuille(posArbre)){
+            if((EstUneFeuille(posArbre)) && (nbrChar<nombreChar)){
                 printf("%d ascii d'une feuille\n",posArbre.codeAscii);
                 fputc((unsigned char)posArbre.codeAscii,fileSortie);
+                nbrChar++;
                 posArbre=racine;
                 }
                 if (buffer[posBuffer]=='1'){
@@ -702,7 +717,6 @@ void decompresseur(char* nomSource, char* nomSortie, occuCharac racine){
   //  fclose(fileSortie);
 }
 /*
-
 void printTree(occuCharac* T, int taille){
     for(int i =0; i<taille;i++){
         printf("P%x [label =\"%d %c x %d\"];\n",&T[i],i,T[i].codeAscii,T[i].occu);
@@ -713,7 +727,6 @@ void printTree(occuCharac* T, int taille){
         printf("P%x -> P%x [color=\"red\"];\n",&T[i],T[i].pere);
     }
 }
-
 */
 
 void compresseur(char* nomSource, char* nomSortie, elementDic* dico, int tailleDico){
@@ -738,6 +751,13 @@ void compresseur(char* nomSource, char* nomSortie, elementDic* dico, int tailleD
             posBuff++;
 		  }
 	  }
+	  if (posBuff!=0){
+        while(posBuff<8){
+            buffer[posBuff]='0';
+            posBuff++;
+        }
+        fputc(bitsToA(buffer),fileSortie);
+      }
 	  fclose(fileSortie);
       fclose(fileSource);
 }
@@ -786,7 +806,6 @@ int main(int argc , char** argv)
   c = charTobin('A');
   for(int i = 0 ; i<8 ; i++ )
     printf("%s \n" , c);
-
   c = intTobin(999);
   printf("%s \n" , c);
   */
@@ -808,7 +827,7 @@ int main(int argc , char** argv)
   compresseur(argv[1],argv[2],D,*tailleDic);
   //printAscii(argv[1],D,*tailleDic);
  printf("-----------------DECOMPRESEUR---------------------------\n");
-  decompresseur(argv[2],argv[3],T[*TailleTabStruct-1]);
+  decompresseur(argv[2],argv[3],T[*TailleTabStruct-1], nombreCharac(argv[1]));
   
   return(0);
 }
