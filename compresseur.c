@@ -71,22 +71,18 @@ int* tabOccu(char* fileName){
   
   if(myFile==NULL)
     {
-        printf("merci de mettre une file \n");
+        //printf("merci de mettre une file \n");
       exit(2);        
     }
-  int charac;
-  printf("--------- \n");
+  unsigned char charac;
   int* tab=malloc(sizeof(int) * 256);
   for (int i=0;i<256;i++)
     {
       tab[i]=0;
     }
-  while ((charac=fgetc(myFile))!=EOF){
+  while ((charac=fgetc(myFile))!=255){
     tab[charac]++;
   }
-for(int i = 0 ; i<256 ; i++)
-	printf("%c = %i num %i \n", i , tab[i],i );
-tab[3]++;
   return(tab);
 }
 
@@ -123,10 +119,9 @@ occuCharac* tabStruct(int* tabInt , int *CompteurTailleStruct){
 	    compteurCases++;
 	  }
       }
-    *CompteurTailleStruct = compteurCases + 2;
-for(int i = 0 ; i<compteurCases ; i++)
-	printf("'%c' est present %i fois \n" , laTabStruct[i].codeAscii ,laTabStruct[i].occu );
-return(laTabStruct);
+    *CompteurTailleStruct = compteurCases + 1 ;
+
+    return(laTabStruct);
 	
 }
 
@@ -176,7 +171,7 @@ void PlusPetiteSomme(int* indiceA , int* indiceB , int taille, occuCharac* T){
     }
   
   
-printf("indiceA = %i , indiceB = %i  " , indiceA[0] , indiceB[0]);
+//printf("indiceA = %i , indiceB = %i  " , indiceA[0] , indiceB[0]);
  
 }
 
@@ -192,8 +187,8 @@ void createurArbre(int *taille , occuCharac* T){
       nouveuNoeud(*indiceA , *indiceB , taille , T);
     }
   
-  for(int i = 0 ; i<*taille; i++)
-	printf("creqteur arbre  : codeAscii ='%i' est present %i fois \n" , T[i].codeAscii ,T[i].occu );
+  //for(int i = 0 ; i<*taille; i++)
+	//printf("creqteur arbre  : codeAscii ='%i' est present %i fois \n" , T[i].codeAscii ,T[i].occu );
   //free(indiceA);
   //free(indiceB);
 }
@@ -286,32 +281,37 @@ void PrintDic(int tailleDic , elementDic *D){
 }
 
 
-char* getCodeFromChar(char monChar, elementDic* monDico, int tailleDico){
+char* getCodeFromChar(unsigned char monChar, elementDic* monDico, int tailleDico){
   int i=0;
   while (i<tailleDico && monDico[i].codeAscii!=monChar){
     i++;
   }
-  char* res=malloc(monDico[i].tailleCode+1);
+  if(i==tailleDico){
+      printf("'%c' n'est pas dans le dico (ascii : %i) code \n",monChar,monChar);
+}
+  char* res=malloc(monDico[i].tailleCode);
   for (int j=0;j<monDico[i].tailleCode;j++){
-    res[j]=monDico[i].codeArbre[j] + '0';
+    res[j]=monDico[i].codeArbre[j];
   }
-  res[monDico[i].tailleCode]='\0';
   //printf("char %c code %s \n",monChar, res);
   return(res);
 }
 
 
-int getTailleCodeChar(char monChar, elementDic* monDico, int tailleDico){
+int getTailleCodeChar(unsigned char monChar, elementDic* monDico, int tailleDico){
     int i=0;
   while (i<tailleDico && monDico[i].codeAscii!=monChar){
     i++;
   }
+  if(i==tailleDico){
+    printf("'%c' n'est pas dans le dico (ascii : %i) taille \n",monChar,monChar);
+    }
   return(monDico[i].tailleCode);
 }
 
 
-char bitsToA(char* binString){
-    char res;
+unsigned char bitsToA(char* binString){
+    unsigned char res;
     for(int i=0;i<8;i++){
         res=(2*res+(binString[i]=='0' ? 0:1));
     }
@@ -319,13 +319,12 @@ char bitsToA(char* binString){
 }
 
 
-char* charToBin(char monChar){
-    int monInt=(int)monChar;
-    char* res=malloc(sizeof(char));
+char* charToBin(unsigned char monChar){
+    char* res=malloc(8);
     int i=0;
-    while(monInt!=0){
-        res[7-i]=(monInt%2==1 ? '1' : '0');
-        monInt=monInt/2;
+    while(monChar!=0){
+        res[7-i]=(monChar%2==1 ? '1' : '0');
+        monChar=monChar/2;
         i++;
     }
     while(i<8){
@@ -336,27 +335,42 @@ char* charToBin(char monChar){
 }
 
 
-
-
+void printString(char* string, int taille){
+    for (int i=0;i<taille;i++){
+        printf("%c",string[i]);
+    }
+    printf(" ma string\n");
+}
 
         //filsGauche : 1 ; filsDroite : 0
 void decompresseur(char* nomSource, char* nomSortie, occuCharac racine){
     FILE *fileSource=fopen(nomSource,"r");
     FILE *fileSortie=fopen(nomSortie,"w");
-    char charac;
+    unsigned char charac;
     char* buffer;
     occuCharac posArbre=racine;
-    while((charac=fgetc(fileSource))!=EOF){
-            buffer=charToBin(charac);
-            for(int posBuffer=0;posBuffer<8;posBuffer++){
-                if(EstUneFeuille(posArbre)){
-                    fputc(posArbre.codeAscii,fileSortie);
-                    posArbre=racine;
+    while((charac=fgetc(fileSource))!=255){
+        buffer=charToBin(charac); 
+       // printf("%c charac  %x ",charac,charac);
+        printString(buffer,8);
+       
+        for(int posBuffer=0;posBuffer<8;posBuffer++){
+            if(EstUneFeuille(posArbre)){
+                //printf("%d mon code ascii que je rentre",posArbre.codeAscii);
+                fputc(()unsigned char)posArbre.codeAscii,fileSortie);
+                posArbre=racine;
                 }
-                posArbre=(buffer[posBuffer]=='1' ? *posArbre.FG : *posArbre.FD);
-            }
+                if (buffer[posBuffer]=='1'){
+            posArbre=*posArbre.FG;
+                }
+                else{
+                    posArbre=*posArbre.FD;
+                }
+        }
+        free(buffer);
     }
-    putc(EOF,fileSortie);
+//    fclose(fileSource);
+  //  fclose(fileSortie);
 }
 
 
@@ -366,38 +380,27 @@ void decompresseur(char* nomSource, char* nomSortie, occuCharac racine){
 void compresseur(char* nomSource, char* nomSortie, elementDic* dico, int tailleDico){
   FILE *fileSource=fopen(nomSource, "r");
   FILE *fileSortie=fopen(nomSortie,"w");
-  char charac;
+  unsigned char charac;
   char* buffer=malloc(8);
-  int posChar=0;
   int posBuff=0;
-  while ((charac=fgetc(fileSource))!=EOF){
-      posChar=0;
+  while ((charac=fgetc(fileSource))!=255){
+      //printf("'%c' trouve dans le file (ascii : %i)\n",charac,charac);
       int tailleCode=getTailleCodeChar(charac,dico,tailleDico);
-      char* codeChar=malloc(tailleCode);
-      codeChar=getCodeFromChar(charac,dico,tailleDico);
-      while(posChar<tailleCode){
-          if (posBuff==8){
-              fputc(bitsToA(buffer),fileSortie);
-              posBuff=0;
-        }             
-              buffer[posBuff++]=codeChar[posChar++];
-      }
-  }
-  if (posBuff==8){
-      fputc(bitsToA(buffer),fileSortie);
-  }
-  int tailleCodeEOF=getTailleCodeChar(3,dico,tailleDico);
-  char* codeEOF=malloc(tailleCodeEOF);
-  codeEOF=getCodeFromChar(3,dico,tailleDico);
-  for (int i=0;i<tailleCodeEOF;i++){
-      if (posBuff==8){
-          fputc(bitsToA(buffer),fileSortie);
-          posBuff=0;
-    } 
-          buffer[posBuff++]=codeEOF[i];
-}
-//fclose(fileSource);
-//fclose(fileSortie);
+      //printf("%i la taille du code de ce charac %c",tailleCode,charac);
+      char* codeChar=getCodeFromChar(charac,dico,tailleDico);
+      //printString(codeChar,tailleCode);
+	  for(int i=0;i<tailleCode;i++){
+			if(posBuff==8){
+                //printString(buffer,8);
+				fputc(bitsToA(buffer),fileSortie);
+				posBuff=0;
+				}
+			buffer[posBuff]=codeChar[i]+'0';
+            posBuff++;
+		  }
+	  }
+	  fclose(fileSortie);
+      fclose(fileSource);
 }
 
 
@@ -419,10 +422,8 @@ int main(int argc , char** argv)
   CreationDic(tabCode , D , T[*TailleTabStruct-1] , tailleCode , tailleDic);
   //printf("tailleDic = %i \n" , *tailleDic);  
   //PrintDic(*tailleDic , D);
-  //char myChar=getchar();
-  //getCodeFromChar(myChar,D,*tailleDic);
-  //getTailleCodeChar(myChar,D,*tailleDic);
   compresseur(argv[1],argv[2],D,*tailleDic);
+  //printAscii(argv[1],D,*tailleDic);
   decompresseur(argv[2],argv[3],T[*TailleTabStruct-1]);
   return(0);
 }
