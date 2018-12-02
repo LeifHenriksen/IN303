@@ -357,7 +357,7 @@ void decompresseur(char* nomSource, char* nomSortie, occuCharac racine){
         for(int posBuffer=0;posBuffer<8;posBuffer++){
             if(EstUneFeuille(posArbre)){
                 //printf("%d mon code ascii que je rentre",posArbre.codeAscii);
-                fputc(()unsigned char)posArbre.codeAscii,fileSortie);
+                fputc((unsigned char)posArbre.codeAscii,fileSortie);
                 posArbre=racine;
                 }
                 if (buffer[posBuffer]=='1'){
