@@ -558,7 +558,7 @@ void decompreseurArbre(FILE* fileC , int *T){
  
  
 
- char buffint;
+ unsigned char buffint;
  unsigned char buffchar;
  char *strInt = malloc(32);
  //nbchars
@@ -796,8 +796,8 @@ void compresseurTotal(char* nomSource, char* nomSortie, elementDic* dico, int ta
   compresseurArbre(T , fileSortie , tailleDic);
   compresseur(fileSource,fileSortie,dico,tailleDic);
 
-  // fclose(fileSortie);
-  // fclose(fileSource);
+  fclose(fileSortie);
+  //fclose(fileSource);
 }
 
 
@@ -819,7 +819,8 @@ void decompresseurTotal(char* nomSource, char* nomSortie){
     int nbrChars=0;
     decompreseurArbre(fileSource, tabInt);
     for(int i=0;i<256;i++){
-        if (tabInt[i]!=0){
+        if (tabInt[i]>0){
+            printf("%d la valeur dans tabInt",tabInt[i]);
             nbrChars=nbrChars+tabInt[i];
         }
     }
@@ -835,6 +836,8 @@ void decompresseurTotal(char* nomSource, char* nomSortie){
     int *tailleDico=malloc(sizeof(int));
     CreationDic(tabDic,dico,T[*tailleTabStruct-1],tailleCode,tailleDico); */
     decompresseur(fileSource,fileSortie,T[*tailleTabStruct-1],nbrChars);
+    
+    
 
 
 
@@ -884,15 +887,15 @@ int main(int argc , char** argv)
   
   printf("\n -------tailledic = %i ---------\n" ,*tailleDic );
  
-  printf("-------COMPRESEUR-------------------------------------\n");
+  printf("-------COMPRESSEUR-------------------------------------\n");
 
   compresseurTotal(argv[1] , argv[2] , D, *tailleDic ,T );
   
   
 
-  printf("-----------------DECOMPRESEUR---------------------------\n");
+  printf("-----------------DECOMPRESSEUR---------------------------\n");
  
-  decompresseurTotal(argv[2],argv[3]);
+ // decompresseurTotal(argv[2],argv[3]);
   
    return(0);
 }
