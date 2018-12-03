@@ -17,7 +17,6 @@ apres on peut faire le code, puis compreser et finalement decompreser
 ----------------------------------------------FIN-----------------
 */
 
-
 void delay(int milliseconds)
 {
     long pause;
@@ -293,7 +292,7 @@ void PrintDic(int tailleDic , elementDic *D){
 }
 
 
-//-------------------------------------COMPRESEUR--------------------------------------------//
+//-------------------------------------COMPRESEUR ARBRE--------------------------------------------//
 //nbchars 8bits , char 8bits , occu sizeof(int);
 
 //occu -> bin
@@ -368,11 +367,32 @@ char createurBuffer(char* str){
 }
 
 
-void compreseurArbre(occuCharac *T , char* file , int tailleDic)
+int nbrCharFile(char* nomSource){
+    FILE* fileSource=fopen(nomSource,"r");
+    char myChar;
+    int res=0;
+    while((myChar=fgetc(fileSource))!=EOF){
+        res++;
+    }
+    return(res);
+}
+
+
+unsigned char bitsToA(char* binString){
+    unsigned char res;
+    for(int i=0;i<8;i++){
+        res=(2*res+(binString[i]=='0' ? 0:1));
+    }
+    return (res);
+}
+
+
+
+void compresseurArbre(occuCharac *T , FILE* nomSortie , int tailleDic)
 {
-  FILE *FileComprime;
-  FileComprime = fopen(file ,"w");
-  
+
+
+  FILE *FileComprime = nomSortie;
   char buff;
   char *buffint = malloc(32);
   for(int i=0 ; i<32 ; i++)
@@ -436,7 +456,7 @@ void compreseurArbre(occuCharac *T , char* file , int tailleDic)
 
   
   //par fois ne marche pas
-  fclose (FileComprime);
+  // fclose (FileComprime);
 }
 
 int nbFeuilles(occuCharac *T)
@@ -453,7 +473,7 @@ int nbFeuilles(occuCharac *T)
 
 //------------------------------------------------------------------------//
 
-//--------------------------decompreseur---------------------------------//
+//--------------------------decompreseur ARBRE---------------------------------//
 //nbchars 8bits , char 8bits , occu sizeof(int);
 
 
@@ -531,18 +551,18 @@ int strToint(char* str){
 }
 
 
-void decompreseurArbre(char* fileC , int *T){
+void decompreseurArbre(FILE* fileC , int *T){
 
- FILE *fileComprime;
- fileComprime = fopen(fileC , "r");
+ FILE *fileComprime=fileC;
+ 
+ 
 
-
- char buffint;
- char buffchar;
+ unsigned char buffint;
+ unsigned char buffchar;
  char *strInt = malloc(32);
  //nbchars
 
- char nbchars;
+ int nbchars;
  nbchars = fgetc(fileComprime);
  printf("nb chars = %i \n" , nbchars);
 
@@ -605,6 +625,229 @@ void decompreseurArbre(char* fileC , int *T){
 
 //--------------------------------------------------------------//
 
+
+//---------------------FELIX--------------------------------------//
+
+void getCodeFromChar(unsigned char monChar, elementDic* monDico, int tailleDico , char* res){
+  //res est un ptr vers une variable declare en compresseur
+
+  // printf("\n 1---------- \n");
+
+  int i=0;
+  while (i<tailleDico && monDico[i].codeAscii!=monChar){
+    i++;
+  }
+  if(i>=tailleDico){
+    printf("'%c' n'est pas dans le dico (ascii : %i) code \n",monChar,monChar);
+  }
+  //printf("\n 2---------- \n");
+  //  char* res=(char*) malloc(monDico[i].tailleCode);
+  //printf("\n 3---------- \n");
+
+  for (int j=0;j<monDico[i].tailleCode;j++){
+    res[j]=monDico[i].codeArbre[j];
+  }
+  
+  // printf("\n char %c code %s \n",monChar, res);
+  //return(res);
+}
+
+
+int getTailleCodeChar(unsigned char monChar, elementDic* monDico, int tailleDico){
+  int i=0;
+  while (i<tailleDico && monDico[i].codeAscii!=monChar){
+    i++;
+  }
+  if(i>=tailleDico){
+    printf("'%c' n'est pas dans le dico (ascii : %i) taille \n",monChar,monChar);
+  }
+  /*
+int present = 0;
+  int indice;
+  for(int i = 0 ; i<tailleDico ; i++)
+  if(monDico[i].codeAscii == monChar)
+      indice = i;
+      // printf("indice = %i \n" , indice);
+ */  
+  return(monDico[i].tailleCode);
+}
+
+
+
+
+
+char* charToBin(unsigned char monChar){
+    char* res=malloc(8);
+    int i=0;
+    while(monChar!=0){
+        res[7-i]=(monChar%2==1 ? '1' : '0');
+        monChar=monChar/2;
+        i++;
+    }
+    while(i<8){
+        res[7-i]='0';
+        i++;
+    }
+    return(res);
+}
+
+
+void printString(char* string, int taille){
+    for (int i=0;i<taille;i++){
+        printf("%c",string[i]);
+    }
+    printf(" ma string\n");
+}
+
+        //filsGauche : 1 ; filsDroite : 0
+void decompresseur(FILE* nomSource, FILE* nomSortie, occuCharac racine, int nbrChar){
+    //FILE *fileSource=fopen(nomSource,"r");
+    //FILE *fileSortie=fopen(nomSortie,"w");
+    unsigned char charac;
+    char* buffer;
+    occuCharac posArbre=racine;
+    int compteurChar=0;
+    while((charac=fgetc(nomSource))!=255){
+        buffer=charToBin(charac); 
+        //printf("%c charac  %x ",charac,charac);
+        printString(buffer,8);
+       
+        for(int posBuffer=0;posBuffer<8;posBuffer++){
+            if(EstUneFeuille(posArbre) && (compteurChar<nbrChar)){
+                //printf("%d ascii d'une feuille\n",posArbre.codeAscii);
+                fputc((unsigned char)posArbre.codeAscii,nomSortie);
+                posArbre=racine;
+                compteurChar++;
+                }
+                if (buffer[posBuffer]=='1'){
+                    printf(" got 1\n");
+                    posArbre=*posArbre.FG;
+                }
+                else{
+                    printf(" got 0\n");
+                    posArbre=*posArbre.FD;
+                }
+        }
+        free(buffer);
+    }
+//    fclose(fileSource);
+  //  fclose(fileSortie);
+}
+/*
+void printTree(occuCharac* T, int taille){
+    for(int i =0; i<taille;i++){
+        printf("P%x [label =\"%d %c x %d\"];\n",&T[i],i,T[i].codeAscii,T[i].occu);
+    }
+    for(int i =0; i<taille;i++){
+        printf("P%x -> P%x [color=\"green\"];\n",&T[i],T[i].FG);
+        printf("P%x -> P%x [color=\"blue\"];\n",&T[i],T[i].FD);
+        printf("P%x -> P%x [color=\"red\"];\n",&T[i],T[i].pere);
+    }
+}
+*/
+
+void compresseur(FILE* nomSource, FILE *nomSortie, elementDic* dico, int tailleDico){
+  //FILE *fileSource=fopen(nomSource, "r");
+  //FILE *fileSortie=fopen(nomSortie,"w");
+
+  FILE *fileSource = nomSource;
+  FILE *fileSortie = nomSortie;
+  //on pase code char comme pointeur dans la fonction getCodeFromChar, et getCodeFromChar est un void, le malloc
+  //qui etais dans getCodeFromChar donne segmentation fault avec les gros fichiers
+  char* codeChar = malloc(256);
+
+  unsigned char charac;
+  char* buffer=malloc(8);
+  int posBuff=0;
+
+  while ((charac=fgetc(fileSource))!=255){
+    // printf("'%c' trouve dans le file (ascii : %i)\n",charac,charac);
+    int tailleCode=getTailleCodeChar(charac,dico,tailleDico);
+    //printf("%i la taille du code de ce charac %c",tailleCode,charac);
+    getCodeFromChar(charac,dico,tailleDico, codeChar);
+    //printString(codeChar,tailleCode);
+    for(int i=0;i<tailleCode;i++){
+      if(posBuff==8){
+	//	printString(buffer,8);
+	fputc(bitsToA(buffer),fileSortie);
+	posBuff=0;
+      }
+      buffer[posBuff]=codeChar[i]+'0';
+      posBuff++;
+    }
+  }
+  // fclose(fileSortie);
+  //fclose(fileSource);
+}
+
+//--------------------------------------------------------------------------//
+
+
+
+
+
+//--------------------------------------FINAL-----------------------------//
+
+void compresseurTotal(char* nomSource, char* nomSortie, elementDic* dico, int tailleDic , occuCharac *T){
+  FILE *fileSource=fopen(nomSource, "r");
+  FILE *fileSortie=fopen(nomSortie,"w");
+
+  compresseurArbre(T , fileSortie , tailleDic);
+  compresseur(fileSource,fileSortie,dico,tailleDic);
+
+  fclose(fileSortie);
+  //fclose(fileSource);
+}
+
+
+
+
+void decompresseurTotal(char* nomSource, char* nomSortie){
+
+
+  //decompreseurLeif
+  //creation de le nouveau occuChara* T avec le tabOccu que nous donne le decompreseurLeif
+  //decompresseurFelix qui utilise T
+    
+    FILE* fileSource=fopen(nomSource,"r");
+    FILE* fileSortie=fopen(nomSortie,"w");
+    int *tabInt=malloc(256*sizeof(int));
+    for (int i=0;i<256;i++){
+        tabInt[i]=0;
+    }
+    int nbrChars=0;
+    decompreseurArbre(fileSource, tabInt);
+    for(int i=0;i<256;i++){
+        if (tabInt[i]>0){
+            printf("%d la valeur dans tabInt",tabInt[i]);
+            nbrChars=nbrChars+tabInt[i];
+        }
+    }
+    printf("%d chars en tout à decompresser\n",nbrChars);
+    int* tailleTabStruct=malloc(sizeof(int));
+    occuCharac* T;
+    T=tabStruct(tabInt,tailleTabStruct);
+
+    createurArbre(tailleTabStruct,T);
+    printTabStruct(T, *tailleTabStruct);
+
+    
+    /*int tabDic=malloc[256];
+    elementDic* dico=malloc(sizeof(elementDic)*1000);
+    int tailleCode=0;
+    int *tailleDico=malloc(sizeof(int));
+    CreationDic(tabDic,dico,T[*tailleTabStruct-1],tailleCode,tailleDico); */
+    // decompresseur(fileSource,fileSortie,T[*tailleTabStruct-1],nbrChars);
+    
+    
+
+
+
+}
+
+//-------------------------------------------------------------------------//
+
+
 int main(int argc , char** argv)
 {
   
@@ -618,10 +861,10 @@ int main(int argc , char** argv)
 
   T = tabStruct(tabOccu(argv[1]) , TailleTabStruct);
   createurArbre(TailleTabStruct , T);
- //printTabStruct(T , *TailleTabStruct);
+  //printTabStruct(T , *TailleTabStruct);
   
   CreationDic(tabCode , D , T[*TailleTabStruct-1] , tailleCode , tailleDic);
-  printf("tailleDic = %i \n" , *tailleDic);
+  // printf("tailleDic = %i \n" , *tailleDic);
   PrintDic(*tailleDic , D);
 
 
@@ -633,7 +876,6 @@ int main(int argc , char** argv)
   c = charTobin('A');
   for(int i = 0 ; i<8 ; i++ )
     printf("%s \n" , c);
-
   c = intTobin(999);
   printf("%s \n" , c);
   */
@@ -642,34 +884,20 @@ int main(int argc , char** argv)
   int newNbOccu[256];
   for(int i = 0 ; i<256 ; i++)
     newNbOccu[i]=0;
-
+  
+  //-----------------------FINAL-----------------------------------//
   
   printf("\n -------tailledic = %i ---------\n" ,*tailleDic );
-  compreseurArbre(T , "lala.txt" , *tailleDic);
-  decompreseurArbre("lala.txt",newNbOccu);
+ 
+  printf("-------COMPRESSEUR-------------------------------------\n");
 
-  printTint(tabOccu(argv[1]));
-  printf("\n");
-  printTint(newNbOccu);
+  compresseurTotal(argv[1] , argv[2] , D, *tailleDic ,T );
+  
+  
 
-  /*
-  char* str = malloc(32);
-  for(int i = 0;i<32;i++)
-    str[i]=0;
+  printf("-----------------DECOMPRESSEUR---------------------------\n");
+ 
+  decompresseurTotal(argv[2],argv[3]);
   
-  
-  
-  binToint(88,str , 24);
-  for(int i = 0;i<32;i++)
-    printf("%i " , str[i]);
-	printf("\n");
-  int x =strToint(str);
-  printf("valeur en int = %i \n",x);
-  char* y;
-  y = intTobin(x);
-  for(int i = 0;i<32;i++)
-    printf("%c " , y[i]);
-  */
-  
-  return(0);
+   return(0);
 }
