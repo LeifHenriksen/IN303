@@ -242,6 +242,7 @@ int NbDeSansPeres(int taille , occuCharac* T){
 void ajoutPere(int indicefils,int indicepere , occuCharac* T){
   T[indicefils].pere = &T[indicepere];
   T[indicefils].perePres=1;
+  T[indicepere].codeAscii=0;
 }
 
 void ajoutFeuilleD(int indicefils,int indicepere ,occuCharac* T ){ T[indicepere].FD= &T[indicefils];}
@@ -368,7 +369,7 @@ char createurBuffer(char* str){
 }
 
 
-int nbrCharFile(char* nomSource){
+/*int nbrCharFile(char* nomSource){
     FILE* fileSource=fopen(nomSource,"r");
     char myChar;
     int res=0;
@@ -376,7 +377,7 @@ int nbrCharFile(char* nomSource){
         res++;
     }
     return(res);
-}
+}*/
 
 
 unsigned char bitsToA(char* binString){
@@ -677,19 +678,22 @@ int present = 0;
 
 
 
-char* charToBin(unsigned char monChar){
-    char* res=malloc(8);
+void charToBin(unsigned char monChar, char* buffer){
     int i=0;
+    //printf("ctb");
     while(monChar!=0){
-        res[7-i]=(monChar%2==1 ? '1' : '0');
+        //printf(" %i ",i);
+        buffer[7-i]=(monChar%2==1 ? '1' : '0');
         monChar=monChar/2;
         i++;
     }
+    //printf("\nctb2 ");
     while(i<8){
-        res[7-i]='0';
+        //printf("%i ",i);
+        buffer[7-i]='0';
         i++;
     }
-    return(res);
+    printf("\n");
 }
 
 
@@ -701,35 +705,36 @@ void printString(char* string, int taille){
 }
 
         //filsGauche : 1 ; filsDroite : 0
-void decompresseur(FILE* nomSource, FILE* nomSortie, occuCharac racine, int nbrChar){
-    //FILE *fileSource=fopen(nomSource,"r");
-    //FILE *fileSortie=fopen(nomSortie,"w");
+void decompresseur(FILE* fileComp, FILE* fileDecomp, occuCharac racine, int nbrChar, char* buffer){
+    //FILE *fileSource=nomSource;
+    //FILE *fileSortie = nomSortie;
     unsigned char charac;
-    char* buffer;
     occuCharac posArbre=racine;
     int compteurChar=0;
-    while((charac=fgetc(nomSource))!=255){
-        buffer=charToBin(charac); 
+    while((charac=fgetc(fileComp))!=255){
+        charToBin(charac, buffer); 
         //printf("%c charac  %x ",charac,charac);
-        printString(buffer,8);
+        //printString(buffer,8);
        
         for(int posBuffer=0;posBuffer<8;posBuffer++){
             if(EstUneFeuille(posArbre) && (compteurChar<nbrChar)){
-                //printf("%d ascii d'une feuille\n",posArbre.codeAscii);
-                fputc((unsigned char)posArbre.codeAscii,nomSortie);
+                unsigned char charact=(posArbre.codeAscii)%256;
+                printf("(%c)",charact);
+                fputc(charact,fileDecomp);
+                //printf("leprobestlà ? \n");
                 posArbre=racine;
+                //printf("ou là ? \n");
                 compteurChar++;
                 }
                 if (buffer[posBuffer]=='1'){
-                    printf(" got 1\n");
+                    //printf(" got 1\n");
                     posArbre=*posArbre.FG;
                 }
                 else{
-                    printf(" got 0\n");
+                    //printf(" got 0\n");
                     posArbre=*posArbre.FD;
                 }
         }
-        free(buffer);
     }
 //    fclose(fileSource);
   //  fclose(fileSortie);
@@ -747,12 +752,10 @@ void printTree(occuCharac* T, int taille){
 }
 */
 
-void compresseur(FILE* nomSource, FILE *nomSortie, elementDic* dico, int tailleDico){
+void compresseur(FILE* fileSource, FILE* fileComp, elementDic* dico, int tailleDico){
   //FILE *fileSource=fopen(nomSource, "r");
   //FILE *fileSortie=fopen(nomSortie,"w");
 
-  FILE *fileSource = nomSource;
-  FILE *fileSortie = nomSortie;
   //on pase code char comme pointeur dans la fonction getCodeFromChar, et getCodeFromChar est un void, le malloc
   //qui etais dans getCodeFromChar donne segmentation fault avec les gros fichiers
   char* codeChar = malloc(256);
@@ -770,7 +773,7 @@ void compresseur(FILE* nomSource, FILE *nomSortie, elementDic* dico, int tailleD
     for(int i=0;i<tailleCode;i++){
       if(posBuff==8){
 	//	printString(buffer,8);
-	fputc(bitsToA(buffer),fileSortie);
+	fputc(bitsToA(buffer),fileComp);
 	posBuff=0;
       }
       buffer[posBuff]=codeChar[i]+'0';
@@ -789,55 +792,65 @@ void compresseur(FILE* nomSource, FILE *nomSortie, elementDic* dico, int tailleD
 
 //--------------------------------------FINAL-----------------------------//
 
-void compresseurTotal(char* nomSource, char* nomSortie, elementDic* dico, int tailleDic , occuCharac *T){
+void compresseurTotal(char* nomSource, char* nomComp, elementDic* dico, int tailleDic , occuCharac *T){
   FILE *fileSource=fopen(nomSource, "r");
-  FILE *fileSortie=fopen(nomSortie,"w");
+  FILE *fileComp=fopen(nomComp,"w");
 
-  compresseurArbre(T , fileSortie , tailleDic);
-  compresseur(fileSource,fileSortie,dico,tailleDic);
+  compresseurArbre(T , fileComp , tailleDic);
+  compresseur(fileSource,fileComp,dico,tailleDic);
 
-  fclose(fileSortie);
+  fclose(fileComp);
   //fclose(fileSource);
 }
 
 
 
 
-void decompresseurTotal(char* nomSource, char* nomSortie){
+void decompresseurTotal(char* nomComp, char* nomDecomp){
 
 
   //decompreseurLeif
   //creation de le nouveau occuChara* T avec le tabOccu que nous donne le decompreseurLeif
   //decompresseurFelix qui utilise T
     
-    FILE* fileSource=fopen(nomSource,"r");
-    FILE* fileSortie=fopen(nomSortie,"w");
+    FILE* fileComp=fopen(nomComp,"r");
+    FILE* fileDecomp=fopen(nomDecomp,"w");
     int *tabInt=malloc(256*sizeof(int));
+    fputc('1',fileDecomp);
+    char* buffer=malloc(8*sizeof(char));
+    fputc('2',fileDecomp);
     for (int i=0;i<256;i++){
         tabInt[i]=0;
     }
     int nbrChars=0;
-    decompreseurArbre(fileSource, tabInt);
+    fputc('3',fileDecomp);
+    decompreseurArbre(fileComp, tabInt);
+    fputc('4',fileDecomp);
     for(int i=0;i<256;i++){
         if (tabInt[i]>0){
             printf("%d la valeur dans tabInt",tabInt[i]);
             nbrChars=nbrChars+tabInt[i];
         }
     }
+    //occuCharac *racine=malloc(sizeof(occuCharac));
     printf("%d chars en tout à decompresser\n",nbrChars);
+    fputc('5',fileDecomp);
     int* tailleTabStruct=malloc(sizeof(int));
+    fputc('6',fileDecomp);
     occuCharac* T;
     T=tabStruct(tabInt,tailleTabStruct);
     createurArbre(tailleTabStruct,T);
-    printTabStruct(T, *tailleTabStruct);
+    fputc('7',fileDecomp);
+    //racine=T[*tailleTabStruct-1];
+    //printTabStruct(T, *tailleTabStruct+1);
     /*int tabDic=malloc[256];
     elementDic* dico=malloc(sizeof(elementDic)*1000);
     int tailleCode=0;
     int *tailleDico=malloc(sizeof(int));
     CreationDic(tabDic,dico,T[*tailleTabStruct-1],tailleCode,tailleDico); */
-    decompresseur(fileSource,fileSortie,T[*tailleTabStruct-1],nbrChars);
-    
-    
+    printf("coucouuuuuuuuuuu1\n");
+    decompresseur(fileComp,fileDecomp,T[*tailleTabStruct-1],nbrChars,buffer);
+    printf("coucouuuuuuuuuuu2\n");
 
 
 
@@ -895,7 +908,7 @@ int main(int argc , char** argv)
 
   printf("-----------------DECOMPRESSEUR---------------------------\n");
  
- // decompresseurTotal(argv[2],argv[3]);
+  decompresseurTotal(argv[2],argv[3]);
   
    return(0);
 }
